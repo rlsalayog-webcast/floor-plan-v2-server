@@ -1,0 +1,21 @@
+import AreaDetail from "./area/areaDetail";
+import FloorPlanArea from "./area/floorPlanArea";
+import Floor from "./floor";
+import FloorPlan from "./floorPlan";
+import Landmark from "./landmark";
+
+const associations = () => {
+    Landmark.hasMany(Floor, { as: "floor", foreignKey: "landmarkId" });
+    Floor.belongsTo(Landmark, { foreignKey: "landmarkId" });
+
+    Floor.hasMany(FloorPlan, { as: "floorPlan", foreignKey: "floorId" });
+    FloorPlan.belongsTo(Floor, { foreignKey: "floorId" });
+
+    FloorPlan.hasMany(FloorPlanArea, { as: "area", foreignKey: "floorPlanId" });
+    FloorPlanArea.belongsTo(FloorPlan, { foreignKey: "floorPlanId" });
+
+    FloorPlanArea.hasOne(AreaDetail, { as: "detail", foreignKey: "areaId" });
+    AreaDetail.belongsTo(FloorPlanArea, { as: "detail", foreignKey: "areaId" });
+};
+
+export default associations;
