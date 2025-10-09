@@ -17,7 +17,7 @@ export const getLandmarkById = async (_, { id }) => {
             include: [
                 {
                     model: Floor,
-                    as: "floor",
+                    as: "floors",
                     required: false,
                 },
             ],
@@ -37,7 +37,7 @@ export const getFloorByLevelId = async (_, { landmarkId, levelId }) => {
             include: [
                 {
                     model: FloorPlan,
-                    as: "floorPlan",
+                    as: "floorPlans",
                     required: false,
                 },
             ],

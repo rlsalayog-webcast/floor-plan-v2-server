@@ -2,8 +2,8 @@ import { DataTypes } from "sequelize";
 import sequelize from "../../../utils/database";
 import FloorPlanArea from "./floorPlanArea";
 
-const AreaDetail = sequelize.define(
-    "AreaDetail",
+const FloorPlanAreaDetail = sequelize.define(
+    "FloorPlanAreaDetail",
     {
         id: {
             type: DataTypes.INTEGER,
@@ -34,4 +34,4 @@ const AreaDetail = sequelize.define(
     }
 );
 
-export default AreaDetail;
+export default FloorPlanAreaDetail;

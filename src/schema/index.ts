@@ -31,18 +31,20 @@ export const typeDefs = `#graphql
             landmarkId: ID!
         ): Boolean!
 
-        createArea(
+        createFloorPlan(
             floorId: ID!,
-            x: Float!,
-            y: Float!,
-            width: Float!,
-            height: Float!,
-            backgroundColor: String!,
-            textColor: String!,
+            pathname: String!
+        ): FloorPlan!
+
+        createFloorPlanArea(
+            floorPlanId: ID!,
+            x: String!,
+            y: String!,
+            pageNumber: Int!,
             details: JSON!
         ): FloorPlanArea
 
-        updateFloorAreas(
+        updateFloorPlanArea(
             landmarkId: ID!
             floorId: ID!
             areas: [UpdateFloorPlanAreaInput!]!
@@ -64,10 +66,10 @@ export const typeDefs = `#graphql
 
     type FloorPlanArea {
         id: ID!
-        x: Float!
-        y: Float!
+        x: String!
+        y: String!
         pageNumber: Int!
-        detail: FloorPlanAreaDetail!
+        details: FloorPlanAreaDetail!
         createdAt: String!
         updatedAt: String!
     }
@@ -87,7 +89,7 @@ export const typeDefs = `#graphql
         level: String!
         name: String!
         landmarkId: ID!
-        floorPlan: [FloorPlan]
+        floorPlans: [FloorPlan]
         createdAt: String! 
         updatedAt: String!
     }
@@ -98,7 +100,7 @@ export const typeDefs = `#graphql
         category: String!
         latitude: String!
         longitude: String!
-        floor: [Floor]
+        floors: [Floor]
         createdAt: String!
         updatedAt: String!
     }
@@ -110,8 +112,8 @@ export const typeDefs = `#graphql
 
     input UpdateFloorPlanAreaInput {
         id: ID
-        x: Float!
-        y: Float!
+        x: String!
+        y: String!
         pageNumber: Int!
         details: UpdateAreaDetailsInput!
     }

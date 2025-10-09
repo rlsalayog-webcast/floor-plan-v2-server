@@ -1,7 +1,8 @@
 import sequelize from "../../utils/database";
-import AreaDetails from "../model/area/areaDetail";
+import FloorPlanAreaDetail from "../model/area/areaDetail";
 import FloorPlanArea from "../model/area/floorPlanArea";
 import Floor from "../model/floor";
+import FloorPlan from "../model/floorPlan";
 import Landmark from "../model/landmark";
 
 export const createLandmark = async (_, args, context) => {
@@ -95,31 +96,46 @@ export const deleteFloor = async (_, { id, landmarkId }) => {
     }
 };
 
-export const createArea = async (
-    _,
-    { floorId, x, y, width, height, backgroundColor, textColor, details }
-) => {
+export const createFloorPlan = async (_, { floorId, pathname }) => {
     try {
-        // make sure floor exists
         const floor = await Floor.findByPk(floorId);
         if (!floor) throw new Error("Floor not found");
 
+        const floorPlan = await FloorPlan.create({
+            floorId: floorId,
+            pathname,
+        });
+
+        return floorPlan;
+    } catch (err) {
+        console.error("Error creating floor:", err);
+        throw new Error("Failed to create floor plan");
+    }
+};
+
+export const createFloorPlanArea = async (_, { floorPlanId, x, y, pageNumber, details }) => {
+    const t = await sequelize.transaction();
+
+    try {
+        // make sure floor plan exists
+        const floorPlan = await FloorPlan.findByPk(floorPlanId);
+        if (!floorPlan) throw new Error("Floor plan not found");
+
         // create area first
         const area = await FloorPlanArea.create({
-            floorId,
+            floorPlanId,
             x,
             y,
-            width,
-            height,
-            backgroundColor,
-            textColor,
+            pageNumber,
+            transaction: t,
         });
 
         // then create details and link to area
-        const areaDetails = await AreaDetails.create({
+        const areaDetails = await FloorPlanAreaDetail.create({
             name: details.name,
             description: details.description,
             areaId: (area as any).id,
+            transaction: t,
         });
 
         // attach details in response
@@ -133,17 +149,17 @@ export const createArea = async (
     }
 };
 
-export const updateFloorAreas = async (_, { landmarkId, floorId, areas }) => {
+export const updateFloorPlanArea = async (_, { floorPlanId, areas }) => {
     const t = await sequelize.transaction();
 
     try {
-        const floor: any = await Floor.findOne({
-            where: { id: floorId, landmarkId },
+        const floorPlan: any = await FloorPlan.findOne({
+            where: { id: floorPlanId },
             transaction: t,
         });
 
-        if (!floor) {
-            throw new Error(`Floor ${floorId} not found for landmark ${landmarkId}`);
+        if (!floorPlan) {
+            throw new Error("Floor plan not found");
         }
 
         const updatedAreas: any[] = [];
@@ -153,7 +169,7 @@ export const updateFloorAreas = async (_, { landmarkId, floorId, areas }) => {
 
         // fetch existing areas from DB
         const existingAreas = await FloorPlanArea.findAll({
-            where: { floorId: floor.id },
+            where: { floorPlanId: floorPlan.id },
             transaction: t,
         });
 
@@ -169,26 +185,23 @@ export const updateFloorAreas = async (_, { landmarkId, floorId, areas }) => {
 
         // process create/update
         for (const area of areas) {
-            let floorArea;
+            let floorPlanArea;
 
             if (!area.id) {
                 // CREATE
-                floorArea = await FloorPlanArea.create(
+                floorPlanArea = await FloorPlanArea.create(
                     {
-                        floorId: floor.id,
+                        floorId: floorPlan.id,
                         x: area.x,
                         y: area.y,
-                        width: area.width,
-                        height: area.height,
-                        backgroundColor: area.backgroundColor,
-                        textColor: area.textColor,
+                        pageNumber: area.pageNumber,
                     },
                     { transaction: t }
                 );
 
-                await AreaDetails.create(
+                await FloorPlanAreaDetail.create(
                     {
-                        areaId: floorArea.id,
+                        areaId: floorPlanArea.id,
                         name: area.details.name,
                         description: area.details.description,
                     },
@@ -196,32 +209,27 @@ export const updateFloorAreas = async (_, { landmarkId, floorId, areas }) => {
                 );
             } else {
                 // UPDATE
-                floorArea = await FloorPlanArea.findOne({
-                    where: { id: area.id, floorId: floor.id },
+                floorPlanArea = await FloorPlanArea.findOne({
+                    where: { id: area.id, floorId: floorPlan.id },
                     transaction: t,
                 });
 
-                if (!floorArea) {
-                    throw new Error(
-                        `Area ${area.id} not found for floor ${floorId} in landmark ${landmarkId}`
-                    );
+                if (!floorPlanArea) {
+                    throw new Error(`Area ${area.id} not found for floor ${floorPlanId}`);
                 }
 
-                await floorArea.update(
+                await floorPlanArea.update(
                     {
                         x: area.x,
                         y: area.y,
-                        width: area.width,
-                        height: area.height,
-                        backgroundColor: area.backgroundColor,
-                        textColor: area.textColor,
+                        pageNumber: area.pageNumber,
                     },
                     { transaction: t }
                 );
 
-                await AreaDetails.upsert(
+                await FloorPlanAreaDetail.upsert(
                     {
-                        areaId: floorArea.id,
+                        areaId: floorPlanArea.id,
                         name: area.details.name,
                         description: area.details.description,
                     },
@@ -230,12 +238,12 @@ export const updateFloorAreas = async (_, { landmarkId, floorId, areas }) => {
             }
 
             // reload with details
-            const fullArea = await FloorPlanArea.findByPk(floorArea.id, {
-                include: [{ model: AreaDetails, as: "details" }],
+            const fullFloorPlanArea = await FloorPlanArea.findByPk(floorPlanArea.id, {
+                include: [{ model: FloorPlanAreaDetail, as: "details" }],
                 transaction: t,
             });
 
-            updatedAreas.push(fullArea);
+            updatedAreas.push(fullFloorPlanArea);
         }
 
         await t.commit();
