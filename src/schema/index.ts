@@ -17,7 +17,6 @@ export const typeDefs = `#graphql
             landmarkId: ID!,
             level: String!,
             name: String!,
-            description: String
         ): Floor
 
         updateFloor(
@@ -25,7 +24,6 @@ export const typeDefs = `#graphql
             landmarkId: ID!
             level: String!
             name: String!
-            description: String
         ): Floor!
 
         deleteFloor(
@@ -57,28 +55,41 @@ export const typeDefs = `#graphql
         getFloorByLevelId(landmarkId: ID!, levelId: String!): Floor
     }
 
-    type FloorPlanAreaDetails {
+    type FloorPlanAreaDetail {
         name: String!
         description: String!
+        createdAt: String!
+        updatedAt: String!
     }
 
     type FloorPlanArea {
         id: ID!
         x: Float!
         y: Float!
-        width: Float!
-        height: Float!
-        backgroundColor: String!
-        textColor: String!
-        details: FloorPlanAreaDetails!
+        pageNumber: Int!
+        detail: FloorPlanAreaDetail!
+        createdAt: String!
+        updatedAt: String!
     }
+
+    type FloorPlan {
+        id: ID!
+        pathname: String!
+        floorId: ID!
+        areas: [FloorPlanArea]
+        createdAt: String!
+        updatedAt: String!
+    }
+
 
     type Floor {
         id: ID!
         level: String!
         name: String!
-        description: String
-        areas: [FloorPlanArea]
+        landmarkId: ID!
+        floorPlan: [FloorPlan]
+        createdAt: String! 
+        updatedAt: String!
     }
 
     type Landmark {
@@ -87,7 +98,7 @@ export const typeDefs = `#graphql
         category: String!
         latitude: String!
         longitude: String!
-        floorPlans: [Floor]
+        floor: [Floor]
         createdAt: String!
         updatedAt: String!
     }
@@ -101,10 +112,7 @@ export const typeDefs = `#graphql
         id: ID
         x: Float!
         y: Float!
-        width: Float!
-        height: Float!
-        backgroundColor: String!
-        textColor: String!
+        pageNumber: Int!
         details: UpdateAreaDetailsInput!
     }
 `;

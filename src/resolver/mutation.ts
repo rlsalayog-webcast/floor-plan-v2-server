@@ -28,7 +28,7 @@ export const deleteLandmark = async (_, { id }) => {
     }
 };
 
-export const createFloor = async (_, { landmarkId, level, name, description }) => {
+export const createFloor = async (_, { landmarkId, level, name }) => {
     try {
         const landmark = await Landmark.findByPk(landmarkId);
         if (!landmark) throw new Error("Landmark not found");
@@ -40,7 +40,6 @@ export const createFloor = async (_, { landmarkId, level, name, description }) =
             landmarkId: landmarkId,
             level,
             name,
-            description,
         });
 
         return floor;
@@ -50,7 +49,7 @@ export const createFloor = async (_, { landmarkId, level, name, description }) =
     }
 };
 
-export const updateFloor = async (_, { id, landmarkId, level, name, description }) => {
+export const updateFloor = async (_, { id, landmarkId, level, name }) => {
     try {
         const floor: any = await Floor.findByPk(id);
         if (!floor) throw new Error("Floor not found");
@@ -74,7 +73,6 @@ export const updateFloor = async (_, { id, landmarkId, level, name, description 
         await floor.update({
             level: level ?? floor.level,
             name: name ?? floor.name,
-            description: description ?? floor.description,
         });
 
         return floor;

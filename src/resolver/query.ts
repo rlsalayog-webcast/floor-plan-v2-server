@@ -1,6 +1,5 @@
-import AreaDetails from "../model/area/areaDetail";
-import FloorPlanArea from "../model/area/floorPlanArea";
 import Floor from "../model/floor";
+import FloorPlan from "../model/floorPlan";
 import Landmark from "../model/landmark";
 
 export const getLandmarks = async () => {
@@ -18,7 +17,7 @@ export const getLandmarkById = async (_, { id }) => {
             include: [
                 {
                     model: Floor,
-                    as: "floorPlans",
+                    as: "floor",
                     required: false,
                 },
             ],
@@ -37,15 +36,9 @@ export const getFloorByLevelId = async (_, { landmarkId, levelId }) => {
             where: { landmarkId: landmarkId, id: levelId },
             include: [
                 {
-                    model: FloorPlanArea,
-                    as: "areas",
+                    model: FloorPlan,
+                    as: "floorPlan",
                     required: false,
-                    include: [
-                        {
-                            model: AreaDetails,
-                            as: "details",
-                        },
-                    ],
                 },
             ],
         });
