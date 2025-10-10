@@ -1,3 +1,5 @@
+import FloorPlanAreaDetail from "../model/area/areaDetail";
+import FloorPlanArea from "../model/area/floorPlanArea";
 import Floor from "../model/floor";
 import FloorPlan from "../model/floorPlan";
 import Landmark from "../model/landmark";
@@ -39,6 +41,24 @@ export const getFloorByLevelId = async (_, { landmarkId, levelId }) => {
                     model: FloorPlan,
                     as: "floorPlans",
                     required: false,
+                    include: [
+                        {
+                            model: FloorPlanArea,
+                            as: "areas",
+                            required: false,
+                            include: [
+                                {
+                                    model: FloorPlanAreaDetail,
+                                    as: "details",
+                                    required: false,
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    model: Landmark,
+                    required: false, // optional if you want to also return the parent landmark
                 },
             ],
         });

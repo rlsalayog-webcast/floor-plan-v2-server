@@ -31,24 +31,36 @@ export const typeDefs = `#graphql
             landmarkId: ID!
         ): Boolean!
 
-        createFloorPlan(
-            floorId: ID!,
+        createFloorPlanWithAreas(
+            floorId: ID!
             pathname: String!
+            areas: [FloorPlanAreaInput!]
         ): FloorPlan!
 
-        createFloorPlanArea(
-            floorPlanId: ID!,
-            x: String!,
-            y: String!,
-            pageNumber: Int!,
-            details: JSON!
-        ): FloorPlanArea
+        updateFloorPlanWithAreas(
+            floorPlanId: ID!
+            pathname: String
+            areas: [FloorPlanAreaInput]
+        ): FloorPlan
 
-        updateFloorPlanArea(
-            landmarkId: ID!
-            floorId: ID!
-            areas: [UpdateFloorPlanAreaInput!]!
-        ): [FloorPlanArea]!
+        # createFloorPlan(
+        #     floorId: ID!,
+        #     pathname: String!
+        # ): FloorPlan!
+
+        # createFloorPlanArea(
+        #     floorPlanId: ID!,
+        #     x: String!,
+        #     y: String!,
+        #     pageNumber: Int!,
+        #     details: JSON!
+        # ): FloorPlanArea
+
+        # updateFloorPlanArea(
+        #     landmarkId: ID!
+        #     floorId: ID!
+        #     areas: [UpdateFloorPlanAreaInput!]!
+        # ): [FloorPlanArea]!
     }
 
     type Query {
@@ -105,16 +117,28 @@ export const typeDefs = `#graphql
         updatedAt: String!
     }
 
-    input UpdateAreaDetailsInput {
-        name: String!
-        description: String!
-    }
+    # input UpdateAreaDetailsInput {
+    #     name: String!
+    #     description: String!
+    # }
 
-    input UpdateFloorPlanAreaInput {
-        id: ID
+    # input UpdateFloorPlanAreaInput {
+    #     id: ID
+    #     x: String!
+    #     y: String!
+    #     pageNumber: Int!
+    #     details: UpdateAreaDetailsInput!
+    # }
+
+    input FloorPlanAreaDetailInput {
+        name: String
+        description: String
+    }
+    
+    input FloorPlanAreaInput {
         x: String!
         y: String!
         pageNumber: Int!
-        details: UpdateAreaDetailsInput!
+        details: FloorPlanAreaDetailInput
     }
 `;

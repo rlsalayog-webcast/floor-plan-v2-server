@@ -18,7 +18,7 @@ const FloorPlanAreaDetail = sequelize.define(
             type: DataTypes.STRING,
             allowNull: false,
         },
-        areaId: {
+        floorPlanAreaId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
