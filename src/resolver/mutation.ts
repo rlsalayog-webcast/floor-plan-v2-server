@@ -1,6 +1,7 @@
 import sequelize from "../../utils/database";
 import FloorPlanAreaDetail from "../model/area/areaDetail";
 import FloorPlanArea from "../model/area/floorPlanArea";
+import Attachment from "../model/attachment";
 import Floor from "../model/floor";
 import FloorPlan from "../model/floorPlan";
 import Landmark from "../model/landmark";
@@ -96,323 +97,185 @@ export const deleteFloor = async (_, { id, landmarkId }) => {
     }
 };
 
-export const createFloorPlanWithAreas = async (_, { floorId, pathname, areas }) => {
-    const t = await sequelize.transaction();
+export const updateFloorPlanWithAreas = async (_, { floorId, id, attachments, areas }) => {
+    const transaction = await sequelize.transaction();
 
     try {
-        // make sure floor exists
-        const floor = await Floor.findByPk(floorId, { transaction: t });
-        if (!floor) throw new Error("Floor not found");
+        if (!floorId) {
+            throw new Error("Missing required field: floorId");
+        }
 
-        // create floor plan
-        const floorPlan: any = await FloorPlan.create(
-            {
-                floorId,
-                pathname,
-            },
-            { transaction: t }
-        );
+        let floorPlan;
 
-        // create areas if provided
-        let createdAreas = [];
-        if (areas && areas.length > 0) {
-            for (const areaData of areas) {
-                const { x, y, pageNumber, details } = areaData;
+        // 🚫 No ID: Create new FloorPlan only if attachment is valid
+        if (!id) {
+            if (!attachments) {
+                throw new Error("Attachment is required when creating a new FloorPlan");
+            }
 
-                const area: any = await FloorPlanArea.create(
-                    {
-                        floorPlanId: floorPlan.id,
-                        x,
-                        y,
-                        pageNumber,
-                    },
-                    { transaction: t }
+            if (attachments.id) {
+                throw new Error(
+                    `Cannot update attachment ${attachments.id} — no FloorPlan exists yet`
                 );
+            }
 
-                const areaDetails = await FloorPlanAreaDetail.create(
+            const { fileName, fileType, filePath } = attachments;
+
+            if (!fileName || !fileType || !filePath) {
+                throw new Error("Attachment must include fileName, fileType, and filePath");
+            }
+
+            // ✅ Create FloorPlan and Attachment
+            floorPlan = await FloorPlan.create({ floorId }, { transaction });
+
+            await Attachment.create(
+                {
+                    fileName,
+                    fileType,
+                    filePath,
+                    floorPlanId: floorPlan.id,
+                },
+                { transaction }
+            );
+
+            await transaction.commit();
+
+            return await FloorPlan.findByPk(floorPlan.id, {
+                include: [
+                    { model: Attachment, as: "attachments" },
                     {
-                        name: details?.name,
-                        description: details?.description,
-                        floorPlanAreaId: area.id,
+                        model: FloorPlanArea,
+                        as: "areas",
+                        include: [{ model: FloorPlanAreaDetail, as: "details" }],
                     },
-                    { transaction: t }
-                );
+                ],
+            });
+        }
 
-                createdAreas.push({
-                    ...area.get(),
-                    details: areaDetails.get(),
-                });
+        // ✅ ID provided: Update FloorPlan, Attachment (if id), and Areas
+        floorPlan = await FloorPlan.findByPk(id, { transaction });
+        if (!floorPlan) {
+            throw new Error(`FloorPlan ${id} not found`);
+        }
+
+        await floorPlan.update({ floorId }, { transaction });
+
+        // ✅ Update attachment only if attachments.id is present
+        if (attachments?.id) {
+            const { id: attachmentId, fileName, fileType, filePath } = attachments;
+
+            if (!fileName || !fileType || !filePath) {
+                throw new Error("Attachment must include fileName, fileType, and filePath");
+            }
+
+            const existingAttachment = await Attachment.findByPk(attachmentId, { transaction });
+            if (!existingAttachment) {
+                throw new Error(`Attachment ${attachmentId} not found`);
+            }
+
+            await existingAttachment.update(
+                {
+                    fileName,
+                    fileType,
+                    filePath,
+                },
+                { transaction }
+            );
+        }
+
+        // ✅ Replace areas
+        if (Array.isArray(areas)) {
+            for (const area of areas) {
+                const { id: areaId, x, y, details } = area;
+
+                if (x == null || y == null) {
+                    throw new Error("Each area must include x and y coordinates");
+                }
+
+                if (!details || !details.name || !details.description) {
+                    throw new Error(
+                        "Each area must include valid details with name and description"
+                    );
+                }
+
+                let areaRecord;
+
+                if (areaId) {
+                    areaRecord = await FloorPlanArea.findByPk(areaId, { transaction });
+
+                    if (!areaRecord) {
+                        throw new Error(`FloorPlanArea ${areaId} not found`);
+                    }
+
+                    await areaRecord.update(
+                        {
+                            x: parseFloat(x),
+                            y: parseFloat(y),
+                        },
+                        { transaction }
+                    );
+
+                    const detailRecord = await FloorPlanAreaDetail.findOne({
+                        where: { floorPlanAreaId: areaId },
+                        transaction,
+                    });
+
+                    if (detailRecord) {
+                        await detailRecord.update(
+                            {
+                                name: details.name,
+                                description: details.description,
+                            },
+                            { transaction }
+                        );
+                    } else {
+                        await FloorPlanAreaDetail.create(
+                            {
+                                name: details.name,
+                                description: details.description,
+                                floorPlanAreaId: areaId,
+                            },
+                            { transaction }
+                        );
+                    }
+                } else {
+                    areaRecord = await FloorPlanArea.create(
+                        {
+                            x: parseFloat(x),
+                            y: parseFloat(y),
+                            pageNumber: 1,
+                            floorPlanId: floorPlan.id,
+                        },
+                        { transaction }
+                    );
+
+                    await FloorPlanAreaDetail.create(
+                        {
+                            name: details.name,
+                            description: details.description,
+                            floorPlanAreaId: areaRecord.id,
+                        },
+                        { transaction }
+                    );
+                }
             }
         }
 
-        await t.commit();
+        await transaction.commit();
 
-        // return the floor plan with areas
-        return {
-            ...floorPlan.get(),
-            areas: createdAreas,
-        };
-    } catch (error) {
-        await t.rollback();
-        console.error("Error creating floor plan with areas:", error);
-        throw new Error("Failed to create floor plan with areas");
-    }
-};
-
-export const updateFloorPlanWithAreas = async (_, { floorPlanId, pathname, areas }) => {
-    const t = await sequelize.transaction();
-
-    try {
-        // include must use the same aliases defined in associations()
-        const floorPlan: any = await FloorPlan.findByPk(floorPlanId, {
+        return await FloorPlan.findByPk(floorPlan.id, {
             include: [
+                { model: Attachment, as: "attachments" },
                 {
                     model: FloorPlanArea,
                     as: "areas",
                     include: [{ model: FloorPlanAreaDetail, as: "details" }],
                 },
             ],
-            transaction: t,
         });
-
-        if (!floorPlan) throw new Error("Floor plan not found");
-
-        // update floor plan
-        if (pathname) floorPlan.pathname = pathname;
-        await floorPlan.save({ transaction: t });
-
-        const existingAreas = floorPlan.areas || [];
-        const updatedAreas = [];
-
-        // iterate through provided areas
-        for (const areaData of areas || []) {
-            const { id, x, y, pageNumber, details } = areaData;
-
-            let area;
-            if (id) {
-                // update existing
-                area = await FloorPlanArea.findByPk(id, { transaction: t });
-                if (!area) throw new Error(`Area with id ${id} not found`);
-                await area.update({ x, y, pageNumber }, { transaction: t });
-            } else {
-                // create new
-                area = await FloorPlanArea.create(
-                    { floorPlanId, x, y, pageNumber },
-                    { transaction: t }
-                );
-            }
-
-            // handle area details
-            let areaDetail = await FloorPlanAreaDetail.findOne({
-                where: { floorPlanAreaId: area.id },
-                transaction: t,
-            });
-
-            if (areaDetail) {
-                await areaDetail.update(
-                    { name: details?.name, description: details?.description },
-                    { transaction: t }
-                );
-            } else {
-                areaDetail = await FloorPlanAreaDetail.create(
-                    {
-                        floorPlanAreaId: area.id,
-                        name: details?.name,
-                        description: details?.description,
-                    },
-                    { transaction: t }
-                );
-            }
-
-            updatedAreas.push({
-                ...area.get(),
-                details: areaDetail.get(),
-            });
-        }
-
-        // delete removed areas
-        const areaIdsToKeep = (areas || []).filter((a) => a.id).map((a) => a.id);
-        const areasToDelete = existingAreas.filter((a) => !areaIdsToKeep.includes(a.id));
-
-        for (const area of areasToDelete) {
-            await FloorPlanAreaDetail.destroy({
-                where: { floorPlanAreaId: area.id },
-                transaction: t,
-            });
-            await FloorPlanArea.destroy({
-                where: { id: area.id },
-                transaction: t,
-            });
-        }
-
-        await t.commit();
-
-        return {
-            ...floorPlan.get(),
-            areas: updatedAreas,
-        };
     } catch (error) {
-        await t.rollback();
+        await transaction.rollback();
         console.error("Error updating floor plan with areas:", error);
-        throw new Error("Failed to update floor plan with areas");
+        throw new Error(error.message || "Failed to update floor plan with areas");
     }
 };
-
-// export const createFloorPlan = async (_, { floorId, pathname }) => {
-//     try {
-//         const floor = await Floor.findByPk(floorId);
-//         if (!floor) throw new Error("Floor not found");
-
-//         const floorPlan = await FloorPlan.create({
-//             floorId: floorId,
-//             pathname,
-//         });
-
-//         return floorPlan;
-//     } catch (err) {
-//         console.error("Error creating floor:", err);
-//         throw new Error("Failed to create floor plan");
-//     }
-// };
-
-// export const createFloorPlanArea = async (_, { floorPlanId, x, y, pageNumber, details }) => {
-//     const t = await sequelize.transaction();
-
-//     try {
-//         // make sure floor plan exists
-//         const floorPlan = await FloorPlan.findByPk(floorPlanId);
-//         if (!floorPlan) throw new Error("Floor plan not found");
-
-//         // create area first
-//         const area = await FloorPlanArea.create({
-//             floorPlanId,
-//             x,
-//             y,
-//             pageNumber,
-//             transaction: t,
-//         });
-
-//         // then create details and link to area
-//         const areaDetails = await FloorPlanAreaDetail.create({
-//             name: details.name,
-//             description: details.description,
-//             floorPlanAreaId: (area as any).id,
-//             transaction: t,
-//         });
-
-//         // attach details in response
-//         return {
-//             ...area.get(),
-//             details: areaDetails.get(),
-//         };
-//     } catch (error) {
-//         console.error("Error creating area:", error);
-//         throw new Error("Failed to create area");
-//     }
-// };
-
-// export const updateFloorPlanArea = async (_, { floorPlanId, areas }) => {
-//     const t = await sequelize.transaction();
-
-//     try {
-//         const floorPlan: any = await FloorPlan.findOne({
-//             where: { id: floorPlanId },
-//             transaction: t,
-//         });
-
-//         if (!floorPlan) {
-//             throw new Error("Floor plan not found");
-//         }
-
-//         const updatedAreas: any[] = [];
-
-//         // collect ids from FE payload
-//         const payloadIds = areas.filter((a) => a.id).map((a) => a.id);
-
-//         // fetch existing areas from DB
-//         const existingAreas = await FloorPlanArea.findAll({
-//             where: { floorPlanId: floorPlan.id },
-//             transaction: t,
-//         });
-
-//         // find areas that exist in DB but not in FE payload
-//         const toDelete = existingAreas.filter(
-//             (dbArea: any) => !payloadIds.includes(dbArea.id.toString())
-//         );
-
-//         // soft delete them (assuming paranoid mode OR isDeleted flag)
-//         for (const delArea of toDelete) {
-//             await delArea.destroy({ transaction: t });
-//         }
-
-//         // process create/update
-//         for (const area of areas) {
-//             let floorPlanArea;
-
-//             if (!area.id) {
-//                 // CREATE
-//                 floorPlanArea = await FloorPlanArea.create(
-//                     {
-//                         floorId: floorPlan.id,
-//                         x: area.x,
-//                         y: area.y,
-//                         pageNumber: area.pageNumber,
-//                     },
-//                     { transaction: t }
-//                 );
-
-//                 await FloorPlanAreaDetail.create(
-//                     {
-//                         floorPlanAreaId: floorPlanArea.id,
-//                         name: area.details.name,
-//                         description: area.details.description,
-//                     },
-//                     { transaction: t }
-//                 );
-//             } else {
-//                 // UPDATE
-//                 floorPlanArea = await FloorPlanArea.findOne({
-//                     where: { id: area.id, floorId: floorPlan.id },
-//                     transaction: t,
-//                 });
-
-//                 if (!floorPlanArea) {
-//                     throw new Error(`Area ${area.id} not found for floor ${floorPlanId}`);
-//                 }
-
-//                 await floorPlanArea.update(
-//                     {
-//                         x: area.x,
-//                         y: area.y,
-//                         pageNumber: area.pageNumber,
-//                     },
-//                     { transaction: t }
-//                 );
-
-//                 await FloorPlanAreaDetail.upsert(
-//                     {
-//                         floorPlanAreaId: floorPlanArea.id,
-//                         name: area.details.name,
-//                         description: area.details.description,
-//                     },
-//                     { transaction: t }
-//                 );
-//             }
-
-//             // reload with details
-//             const fullFloorPlanArea = await FloorPlanArea.findByPk(floorPlanArea.id, {
-//                 include: [{ model: FloorPlanAreaDetail, as: "details" }],
-//                 transaction: t,
-//             });
-
-//             updatedAreas.push(fullFloorPlanArea);
-//         }
-
-//         await t.commit();
-//         return updatedAreas;
-//     } catch (err) {
-//         await t.rollback();
-//         console.error("Error updating floor areas:", err);
-//         throw new Error("Failed to update floor areas");
-//     }
-// };

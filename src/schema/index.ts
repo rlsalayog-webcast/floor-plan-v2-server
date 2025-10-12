@@ -31,42 +31,27 @@ export const typeDefs = `#graphql
             landmarkId: ID!
         ): Boolean!
 
-        createFloorPlanWithAreas(
-            floorId: ID!
-            pathname: String!
-            areas: [FloorPlanAreaInput!]
-        ): FloorPlan!
-
         updateFloorPlanWithAreas(
-            floorPlanId: ID!
-            pathname: String
+            floorId: ID!
+            id: ID
+            attachments: AttachmentInput
             areas: [FloorPlanAreaInput]
         ): FloorPlan
-
-        # createFloorPlan(
-        #     floorId: ID!,
-        #     pathname: String!
-        # ): FloorPlan!
-
-        # createFloorPlanArea(
-        #     floorPlanId: ID!,
-        #     x: String!,
-        #     y: String!,
-        #     pageNumber: Int!,
-        #     details: JSON!
-        # ): FloorPlanArea
-
-        # updateFloorPlanArea(
-        #     landmarkId: ID!
-        #     floorId: ID!
-        #     areas: [UpdateFloorPlanAreaInput!]!
-        # ): [FloorPlanArea]!
     }
 
     type Query {
         getLandmarks: [Landmark!]!
         getLandmarkById(id: ID!): Landmark
         getFloorByLevelId(landmarkId: ID!, levelId: String!): Floor
+    }
+
+    type Attachment {
+        id: ID!
+        fileName: String!
+        fileType: String!
+        filePath: String!
+        createdAt: String!
+        updatedAt: String!
     }
 
     type FloorPlanAreaDetail {
@@ -80,7 +65,6 @@ export const typeDefs = `#graphql
         id: ID!
         x: String!
         y: String!
-        pageNumber: Int!
         details: FloorPlanAreaDetail!
         createdAt: String!
         updatedAt: String!
@@ -88,8 +72,7 @@ export const typeDefs = `#graphql
 
     type FloorPlan {
         id: ID!
-        pathname: String!
-        floorId: ID!
+        attachments: Attachment
         areas: [FloorPlanArea]
         createdAt: String!
         updatedAt: String!
@@ -100,8 +83,7 @@ export const typeDefs = `#graphql
         id: ID!
         level: String!
         name: String!
-        landmarkId: ID!
-        floorPlans: [FloorPlan]
+        floorPlans: FloorPlan
         createdAt: String! 
         updatedAt: String!
     }
@@ -117,28 +99,22 @@ export const typeDefs = `#graphql
         updatedAt: String!
     }
 
-    # input UpdateAreaDetailsInput {
-    #     name: String!
-    #     description: String!
-    # }
-
-    # input UpdateFloorPlanAreaInput {
-    #     id: ID
-    #     x: String!
-    #     y: String!
-    #     pageNumber: Int!
-    #     details: UpdateAreaDetailsInput!
-    # }
-
     input FloorPlanAreaDetailInput {
         name: String
         description: String
     }
     
     input FloorPlanAreaInput {
+        id: ID
         x: String!
         y: String!
-        pageNumber: Int!
         details: FloorPlanAreaDetailInput
+    }
+    
+    input AttachmentInput {
+        id: ID
+        fileName: String!
+        fileType: String!
+        filePath: String!
     }
 `;

@@ -1,20 +1,24 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../../../utils/database";
-import FloorPlan from "../floorPlan";
+import sequelize from "../../utils/database";
+import FloorPlan from "./floorPlan";
 
-const FloorPlanArea = sequelize.define(
-    "FloorPlanArea",
+const Attachment = sequelize.define(
+    "Attachment",
     {
         id: {
             type: DataTypes.INTEGER,
-            primaryKey: true,
             autoIncrement: true,
+            primaryKey: true,
         },
-        x: {
+        fileName: {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        y: {
+        fileType: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        filePath: {
             type: DataTypes.STRING,
             allowNull: false,
         },
@@ -34,4 +38,4 @@ const FloorPlanArea = sequelize.define(
     }
 );
 
-export default FloorPlanArea;
+export default Attachment;

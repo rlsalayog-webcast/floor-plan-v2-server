@@ -10,10 +10,6 @@ const FloorPlan = sequelize.define(
             primaryKey: true,
             autoIncrement: true,
         },
-        pathname: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        },
         floorId: {
             type: DataTypes.INTEGER,
             allowNull: false,
