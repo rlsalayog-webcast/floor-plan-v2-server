@@ -50,6 +50,7 @@ export const typeDefs = `#graphql
         fileName: String!
         fileType: String!
         filePath: String!
+        presignedUrl: String
         createdAt: String!
         updatedAt: String!
     }

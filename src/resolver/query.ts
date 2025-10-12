@@ -1,5 +1,8 @@
+import { BUCKET_NAME } from "../constant";
+import { handlePresignedUrl } from "../helper/handlePresignedUrl";
 import FloorPlanAreaDetail from "../model/area/areaDetail";
 import FloorPlanArea from "../model/area/floorPlanArea";
+import Attachment from "../model/attachment";
 import Floor from "../model/floor";
 import FloorPlan from "../model/floorPlan";
 import Landmark from "../model/landmark";
@@ -34,7 +37,7 @@ export const getLandmarkById = async (_, { id }) => {
 
 export const getFloorByLevelId = async (_, { landmarkId, levelId }) => {
     try {
-        const floor = await Floor.findOne({
+        const floor: any = await Floor.findOne({
             where: { landmarkId: landmarkId, id: levelId },
             include: [
                 {
@@ -54,6 +57,11 @@ export const getFloorByLevelId = async (_, { landmarkId, levelId }) => {
                                 },
                             ],
                         },
+                        {
+                            model: Attachment,
+                            as: "attachments",
+                            required: false,
+                        },
                     ],
                 },
                 {
@@ -65,6 +73,17 @@ export const getFloorByLevelId = async (_, { landmarkId, levelId }) => {
 
         if (!floor) {
             throw new Error(`Floor with level ${levelId} not found for landmark ${landmarkId}`);
+        }
+
+        const attachment = floor?.floorPlans?.attachments;
+
+        if (attachment) {
+            const presignedUrl = await handlePresignedUrl({
+                bucketName: BUCKET_NAME.documents,
+                path: attachment.filePath,
+            });
+
+            attachment.presignedUrl = presignedUrl;
         }
 
         return floor;
