@@ -64,8 +64,8 @@ export const typeDefs = `#graphql
 
     type FloorPlanArea {
         id: ID!
-        x: String!
-        y: String!
+        x: Float!
+        y: Float!
         details: FloorPlanAreaDetail!
         createdAt: String!
         updatedAt: String!
@@ -107,8 +107,8 @@ export const typeDefs = `#graphql
     
     input FloorPlanAreaInput {
         id: ID
-        x: String!
-        y: String!
+        x: Float!
+        y: Float!
         details: FloorPlanAreaDetailInput
     }
     

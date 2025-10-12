@@ -209,8 +209,8 @@ export const updateFloorPlanWithAreas = async (_, { floorId, id, attachments, ar
 
                     await areaRecord.update(
                         {
-                            x: parseFloat(x),
-                            y: parseFloat(y),
+                            x,
+                            y,
                         },
                         { transaction }
                     );
@@ -241,8 +241,8 @@ export const updateFloorPlanWithAreas = async (_, { floorId, id, attachments, ar
                 } else {
                     areaRecord = await FloorPlanArea.create(
                         {
-                            x: parseFloat(x),
-                            y: parseFloat(y),
+                            x,
+                            y,
                             pageNumber: 1,
                             floorPlanId: floorPlan.id,
                         },
