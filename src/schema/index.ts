@@ -42,7 +42,7 @@ export const typeDefs = `#graphql
     type Query {
         getLandmarks: [Landmark!]!
         getLandmarkById(id: ID!): Landmark
-        getFloorByLevelId(landmarkId: ID!, levelId: String!): Floor
+        getFloorByLevelId(floorId: String!): Floor
     }
 
     type Attachment {

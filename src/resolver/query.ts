@@ -35,10 +35,9 @@ export const getLandmarkById = async (_, { id }) => {
     }
 };
 
-export const getFloorByLevelId = async (_, { landmarkId, levelId }) => {
+export const getFloorByLevelId = async (_, { floorId }) => {
     try {
-        const floor: any = await Floor.findOne({
-            where: { landmarkId: landmarkId, id: levelId },
+        const floor: any = await Floor.findByPk(floorId, {
             include: [
                 {
                     model: FloorPlan,
@@ -64,31 +63,26 @@ export const getFloorByLevelId = async (_, { landmarkId, levelId }) => {
                         },
                     ],
                 },
-                {
-                    model: Landmark,
-                    required: false, // optional if you want to also return the parent landmark
-                },
             ],
         });
 
         if (!floor) {
-            throw new Error(`Floor with level ${levelId} not found for landmark ${landmarkId}`);
+            throw new Error(`Floor with ID ${floorId} not found`);
         }
 
-        const attachment = floor?.floorPlans?.attachments;
+        const fp = floor.floorPlans;
 
-        if (attachment) {
+        if (fp?.attachments?.filePath) {
             const presignedUrl = await handlePresignedUrl({
                 bucketName: BUCKET_NAME.documents,
-                path: attachment.filePath,
+                path: fp.attachments.filePath,
             });
-
-            attachment.presignedUrl = presignedUrl;
+            fp.attachments.presignedUrl = presignedUrl;
         }
 
         return floor;
     } catch (err) {
-        console.error("Error fetching floor by level:", err);
-        throw new Error("Failed to fetch floor");
+        console.error("Error fetching floor by floor ID:", err);
+        throw new Error("Failed to fetch floor plan");
     }
 };

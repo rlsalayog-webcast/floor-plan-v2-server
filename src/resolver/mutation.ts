@@ -137,53 +137,42 @@ export const updateFloorPlanWithAreas = async (_, { floorId, id, attachments, ar
                 },
                 { transaction }
             );
+        } else {
+            // ✅ ID provided: Update FloorPlan, Attachment (if id)
+            floorPlan = await FloorPlan.findByPk(id, { transaction });
+            if (!floorPlan) {
+                throw new Error(`FloorPlan ${id} not found`);
+            }
 
-            await transaction.commit();
+            await floorPlan.update({ floorId }, { transaction });
 
-            return await FloorPlan.findByPk(floorPlan.id, {
-                include: [
-                    { model: Attachment, as: "attachments" },
+            // ✅ Update attachment only if attachments.id is present
+            if (attachments?.id) {
+                const { id: attachmentId, fileName, fileType, filePath } = attachments;
+
+                if (!fileName || !fileType || !filePath) {
+                    throw new Error("Attachment must include fileName, fileType, and filePath");
+                }
+
+                const existingAttachment = await Attachment.findByPk(attachmentId, {
+                    transaction,
+                });
+                if (!existingAttachment) {
+                    throw new Error(`Attachment ${attachmentId} not found`);
+                }
+
+                await existingAttachment.update(
                     {
-                        model: FloorPlanArea,
-                        as: "areas",
-                        include: [{ model: FloorPlanAreaDetail, as: "details" }],
+                        fileName,
+                        fileType,
+                        filePath,
                     },
-                ],
-            });
-        }
-
-        // ✅ ID provided: Update FloorPlan, Attachment (if id), and Areas
-        floorPlan = await FloorPlan.findByPk(id, { transaction });
-        if (!floorPlan) {
-            throw new Error(`FloorPlan ${id} not found`);
-        }
-
-        await floorPlan.update({ floorId }, { transaction });
-
-        // ✅ Update attachment only if attachments.id is present
-        if (attachments?.id) {
-            const { id: attachmentId, fileName, fileType, filePath } = attachments;
-
-            if (!fileName || !fileType || !filePath) {
-                throw new Error("Attachment must include fileName, fileType, and filePath");
+                    { transaction }
+                );
             }
-
-            const existingAttachment = await Attachment.findByPk(attachmentId, { transaction });
-            if (!existingAttachment) {
-                throw new Error(`Attachment ${attachmentId} not found`);
-            }
-
-            await existingAttachment.update(
-                {
-                    fileName,
-                    fileType,
-                    filePath,
-                },
-                { transaction }
-            );
         }
 
-        // ✅ Replace areas
+        // ✅ Replace areas (create or update)
         if (Array.isArray(areas)) {
             for (const area of areas) {
                 const { id: areaId, x, y, details } = area;
@@ -207,13 +196,7 @@ export const updateFloorPlanWithAreas = async (_, { floorId, id, attachments, ar
                         throw new Error(`FloorPlanArea ${areaId} not found`);
                     }
 
-                    await areaRecord.update(
-                        {
-                            x,
-                            y,
-                        },
-                        { transaction }
-                    );
+                    await areaRecord.update({ x, y }, { transaction });
 
                     const detailRecord = await FloorPlanAreaDetail.findOne({
                         where: { floorPlanAreaId: areaId },
