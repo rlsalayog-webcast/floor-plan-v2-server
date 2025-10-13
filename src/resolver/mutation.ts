@@ -174,6 +174,23 @@ export const updateFloorPlanWithAreas = async (_, { floorId, id, attachments, ar
 
         // ✅ Replace areas (create or update)
         if (Array.isArray(areas)) {
+            // 🔍 Fetch existing areas for comparison
+            const existingAreas = await FloorPlanArea.findAll({
+                where: { floorPlanId: floorPlan.id },
+                transaction,
+                paranoid: false, // include soft-deleted for accurate diff
+            });
+
+            const incomingAreaIds = areas.filter((a) => a.id).map((a) => a.id);
+            const areasToDelete = existingAreas.filter(
+                (existing) => !incomingAreaIds.includes((existing as any).id)
+            );
+
+            // 🗑️ Soft delete missing areas
+            for (const area of areasToDelete) {
+                await area.destroy({ transaction });
+            }
+
             for (const area of areas) {
                 const { id: areaId, x, y, details } = area;
 
@@ -190,10 +207,18 @@ export const updateFloorPlanWithAreas = async (_, { floorId, id, attachments, ar
                 let areaRecord;
 
                 if (areaId) {
-                    areaRecord = await FloorPlanArea.findByPk(areaId, { transaction });
+                    areaRecord = await FloorPlanArea.findByPk(areaId, {
+                        transaction,
+                        paranoid: false,
+                    });
 
                     if (!areaRecord) {
                         throw new Error(`FloorPlanArea ${areaId} not found`);
+                    }
+
+                    // Restore if previously soft-deleted
+                    if (areaRecord.deletedAt) {
+                        await areaRecord.restore({ transaction });
                     }
 
                     await areaRecord.update({ x, y }, { transaction });
