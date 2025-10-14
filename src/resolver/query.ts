@@ -1,10 +1,7 @@
 import { BUCKET_NAME } from "../constant";
 import { handlePresignedUrl } from "../helper/handlePresignedUrl";
-import FloorPlanAreaDetail from "../model/area/areaDetail";
-import FloorPlanArea from "../model/area/floorPlanArea";
-import Attachment from "../model/attachment";
 import Floor from "../model/floor";
-import FloorPlan from "../model/floorPlan";
+import FloorPlanArea from "../model/floorPlanArea";
 import Landmark from "../model/landmark";
 
 export const getLandmarks = async () => {
@@ -40,28 +37,9 @@ export const getFloorByLevelId = async (_, { floorId }) => {
         const floor: any = await Floor.findByPk(floorId, {
             include: [
                 {
-                    model: FloorPlan,
-                    as: "floorPlans",
+                    model: FloorPlanArea,
+                    as: "areas",
                     required: false,
-                    include: [
-                        {
-                            model: FloorPlanArea,
-                            as: "areas",
-                            required: false,
-                            include: [
-                                {
-                                    model: FloorPlanAreaDetail,
-                                    as: "details",
-                                    required: false,
-                                },
-                            ],
-                        },
-                        {
-                            model: Attachment,
-                            as: "attachments",
-                            required: false,
-                        },
-                    ],
                 },
             ],
         });
@@ -70,14 +48,12 @@ export const getFloorByLevelId = async (_, { floorId }) => {
             throw new Error(`Floor with ID ${floorId} not found`);
         }
 
-        const fp = floor.floorPlans;
-
-        if (fp?.attachments?.filePath) {
+        if (floor?.filePath) {
             const presignedUrl = await handlePresignedUrl({
                 bucketName: BUCKET_NAME.documents,
-                path: fp.attachments.filePath,
+                path: floor.filePath,
             });
-            fp.attachments.presignedUrl = presignedUrl;
+            floor.presignedUrl = presignedUrl;
         }
 
         return floor;

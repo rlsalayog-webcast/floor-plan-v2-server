@@ -1,14 +1,22 @@
 import { DataTypes } from "sequelize";
-import sequelize from "../../../utils/database";
-import FloorPlanArea from "./floorPlanArea";
+import sequelize from "../../utils/database";
+import Floor from "./floor";
 
-const FloorPlanAreaDetail = sequelize.define(
-    "FloorPlanAreaDetail",
+const FloorPlanArea = sequelize.define(
+    "FloorPlanArea",
     {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
+        },
+        x: {
+            type: DataTypes.FLOAT,
+            allowNull: false,
+        },
+        y: {
+            type: DataTypes.FLOAT,
+            allowNull: false,
         },
         name: {
             type: DataTypes.STRING,
@@ -18,11 +26,11 @@ const FloorPlanAreaDetail = sequelize.define(
             type: DataTypes.STRING,
             allowNull: false,
         },
-        floorPlanAreaId: {
+        floorId: {
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: FloorPlanArea,
+                model: Floor,
                 key: "id",
             },
             onUpdate: "CASCADE",
@@ -34,4 +42,4 @@ const FloorPlanAreaDetail = sequelize.define(
     }
 );
 
-export default FloorPlanAreaDetail;
+export default FloorPlanArea;

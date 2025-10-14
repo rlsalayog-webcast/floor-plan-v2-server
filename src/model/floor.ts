@@ -18,6 +18,18 @@ const Floor = sequelize.define(
             type: DataTypes.STRING,
             allowNull: false,
         },
+        fileName: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        fileType: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        filePath: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
         landmarkId: {
             type: DataTypes.INTEGER,
             allowNull: false,

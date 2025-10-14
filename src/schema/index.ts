@@ -32,11 +32,12 @@ export const typeDefs = `#graphql
         ): Boolean!
 
         updateFloorPlanWithAreas(
-            floorId: ID!
-            id: ID
-            attachments: AttachmentInput
+            id: ID!
+            fileName: String!
+            fileType: String!
+            filePath: String!
             areas: [FloorPlanAreaInput]
-        ): FloorPlan
+        ): Floor
     }
 
     type Query {
@@ -45,36 +46,15 @@ export const typeDefs = `#graphql
         getFloorByLevelId(floorId: String!): Floor
     }
 
-    type Attachment {
-        id: ID!
-        fileName: String!
-        fileType: String!
-        filePath: String!
-        presignedUrl: String
-        createdAt: String!
-        updatedAt: String!
-    }
-
-    type FloorPlanAreaDetail {
-        name: String!
-        description: String!
-        createdAt: String!
-        updatedAt: String!
-    }
-
     type FloorPlanArea {
         id: ID!
         x: Float!
         y: Float!
-        details: FloorPlanAreaDetail!
-        createdAt: String!
-        updatedAt: String!
-    }
+        
+        # Details
+        name: String!
+        description: String!
 
-    type FloorPlan {
-        id: ID!
-        attachments: Attachment
-        areas: [FloorPlanArea]
         createdAt: String!
         updatedAt: String!
     }
@@ -84,8 +64,17 @@ export const typeDefs = `#graphql
         id: ID!
         level: String!
         name: String!
-        floorPlans: FloorPlan
-        createdAt: String! 
+
+        # Attachments
+        fileName: String
+        fileType: String
+        filePath: String
+        presignedUrl: String
+
+        # Areas
+        areas: [FloorPlanArea]
+
+        createdAt: String!
         updatedAt: String!
     }
 
@@ -99,23 +88,12 @@ export const typeDefs = `#graphql
         createdAt: String!
         updatedAt: String!
     }
-
-    input FloorPlanAreaDetailInput {
-        name: String
-        description: String
-    }
     
     input FloorPlanAreaInput {
         id: ID
         x: Float!
         y: Float!
-        details: FloorPlanAreaDetailInput
-    }
-    
-    input AttachmentInput {
-        id: ID
-        fileName: String!
-        fileType: String!
-        filePath: String!
+        name: String!
+        description: String!
     }
 `;
