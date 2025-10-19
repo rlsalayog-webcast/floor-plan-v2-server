@@ -65,6 +65,7 @@ export const typeDefs = `#graphql
         id: ID!
         level: String!
         name: String!
+        dataSetId: ID!
 
         # Attachments
         fileName: String
