@@ -128,14 +128,14 @@ export const updateFloorPlanWithAreas = async (_, { id, fileName, fileType, file
             }
 
             for (const area of areas) {
-                const { id: areaId, x, y, name, description } = area;
+                const { id: areaId, x, y, dataSetInfoId } = area;
 
                 if (x == null || y == null) {
                     throw new Error("Each area must include x and y coordinates");
                 }
 
-                if (!name || !description) {
-                    throw new Error("Each area must include name and description");
+                if (!dataSetInfoId) {
+                    throw new Error("Each area must include dataset info id");
                 }
 
                 let areaRecord;
@@ -154,14 +154,13 @@ export const updateFloorPlanWithAreas = async (_, { id, fileName, fileType, file
                         await areaRecord.restore({ transaction });
                     }
 
-                    await areaRecord.update({ x, y, name, description }, { transaction });
+                    await areaRecord.update({ x, y, dataSetInfoId }, { transaction });
                 } else {
                     await FloorPlanArea.create(
                         {
                             x,
                             y,
-                            name,
-                            description,
+                            dataSetInfoId,
                             floorId: id,
                         },
                         { transaction }

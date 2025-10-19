@@ -17,6 +17,7 @@ export const typeDefs = `#graphql
             landmarkId: ID!,
             level: String!,
             name: String!,
+            dataSetId: ID!
         ): Floor
 
         updateFloor(
@@ -24,6 +25,7 @@ export const typeDefs = `#graphql
             landmarkId: ID!
             level: String!
             name: String!
+            dataSetId: ID!
         ): Floor!
 
         deleteFloor(
@@ -52,8 +54,7 @@ export const typeDefs = `#graphql
         y: Float!
         
         # Details
-        name: String!
-        description: String!
+        dataSetInfoId: String!
 
         createdAt: String!
         updatedAt: String!
@@ -93,7 +94,6 @@ export const typeDefs = `#graphql
         id: ID
         x: Float!
         y: Float!
-        name: String!
-        description: String!
+        dataSetInfoId: String!
     }
 `;

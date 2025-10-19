@@ -18,12 +18,8 @@ const FloorPlanArea = sequelize.define(
             type: DataTypes.FLOAT,
             allowNull: false,
         },
-        name: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        },
-        description: {
-            type: DataTypes.STRING,
+        dataSetInfoId: {
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         floorId: {
