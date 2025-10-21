@@ -23,7 +23,7 @@ export const getLandmarkById = async (_, { id }) => {
                     required: false,
                 },
             ],
-            order: [[{ model: Floor, as: "floors" }, "createdAt", "ASC"]],
+            order: [[{ model: Floor, as: "floors" }, "level", "ASC"]],
         });
         if (!landmark) throw new Error("Landmark not found");
         return landmark;
