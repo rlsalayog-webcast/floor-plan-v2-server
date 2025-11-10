@@ -27,22 +27,16 @@ export const deleteLandmark = async (_, { id }) => {
     }
 };
 
-export const createFloor = async (_, { landmarkId, level, name, dataSetId }) => {
+export const createFloor = async (_, args) => {
+    const { landmarkId, level } = args;
     try {
         const landmark = await Landmark.findByPk(landmarkId);
         if (!landmark) throw new Error("Landmark not found");
 
-        const existingFloor = await Floor.findOne({ where: { landmarkId: landmarkId, level } });
-        if (existingFloor) throw new Error(`Floor level ${level} already exists for this landmark`);
+        const exists = await Floor.findOne({ where: { landmarkId, level } });
+        if (exists) throw new Error(`Floor level ${level} already exists for this landmark`);
 
-        const floor = await Floor.create({
-            landmarkId: landmarkId,
-            level,
-            name,
-            dataSetId,
-        });
-
-        return floor;
+        return await Floor.create(args);
     } catch (err) {
         console.error("Error creating floor:", err);
         throw new Error("Failed to create floor");

@@ -17,7 +17,10 @@ export const typeDefs = `#graphql
             landmarkId: ID!,
             level: String!,
             name: String!,
-            dataSetId: ID!
+            dataSetId: ID!,
+            fileName: String!,
+            fileType: String!,
+            filePath: String!
         ): Floor
 
         updateFloor(
