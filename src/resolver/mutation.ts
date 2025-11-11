@@ -87,7 +87,7 @@ export const deleteFloor = async (_, { id, landmarkId }) => {
     }
 };
 
-export const updateFloorPlanWithAreas = async (_, { id, fileName, fileType, filePath, areas }) => {
+export const updateFloorPlanWithAreas = async (_, { id, areas }) => {
     const transaction = await sequelize.transaction();
 
     try {
@@ -99,9 +99,6 @@ export const updateFloorPlanWithAreas = async (_, { id, fileName, fileType, file
         if (!floor) {
             throw new Error(`Floor ${id} not found`);
         }
-
-        // ✅ Update attachment fields directly on Floor
-        await floor.update({ fileName, fileType, filePath }, { transaction });
 
         // ✅ Replace areas (create, update, soft-delete)
         if (Array.isArray(areas)) {

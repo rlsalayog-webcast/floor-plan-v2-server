@@ -41,9 +41,6 @@ export const typeDefs = `#graphql
 
         updateFloorPlanWithAreas(
             id: ID!,
-            fileName: String!,
-            fileType: String!,
-            filePath: String!,
             areas: [FloorPlanAreaInput]
         ): Floor
     }
