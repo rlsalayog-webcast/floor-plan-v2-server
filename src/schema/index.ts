@@ -20,27 +20,30 @@ export const typeDefs = `#graphql
             dataSetId: ID!,
             fileName: String!,
             fileType: String!,
-            filePath: String!
+            filePath: String!,
         ): Floor
 
         updateFloor(
-            id: ID!
-            landmarkId: ID!
-            level: String!
-            name: String!
-            dataSetId: ID!
+            id: ID!,
+            landmarkId: ID!,
+            level: String!,
+            name: String!,
+            dataSetId: ID!,
+            fileName: String!,
+            fileType: String!,
+            filePath: String!,
         ): Floor!
 
         deleteFloor(
-            id: ID!
-            landmarkId: ID!
+            id: ID!,
+            landmarkId: ID!,
         ): Boolean!
 
         updateFloorPlanWithAreas(
-            id: ID!
-            fileName: String!
-            fileType: String!
-            filePath: String!
+            id: ID!,
+            fileName: String!,
+            fileType: String!,
+            filePath: String!,
             areas: [FloorPlanAreaInput]
         ): Floor
     }

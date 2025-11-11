@@ -43,7 +43,8 @@ export const createFloor = async (_, args) => {
     }
 };
 
-export const updateFloor = async (_, { id, landmarkId, level, name, dataSetId }) => {
+export const updateFloor = async (_, args) => {
+    const { id, landmarkId, level } = args;
     try {
         const floor: any = await Floor.findByPk(id);
         if (!floor) throw new Error("Floor not found");
@@ -64,11 +65,7 @@ export const updateFloor = async (_, { id, landmarkId, level, name, dataSetId })
         }
 
         // Update fields (only if provided)
-        await floor.update({
-            level: level ?? floor.level,
-            name: name ?? floor.name,
-            dataSetId: dataSetId ?? floor.dataSetId,
-        });
+        await floor.update({ ...args });
 
         return floor;
     } catch (err) {
