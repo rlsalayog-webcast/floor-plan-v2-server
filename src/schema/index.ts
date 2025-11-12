@@ -39,6 +39,14 @@ export const typeDefs = `#graphql
             landmarkId: ID!,
         ): Boolean!
 
+        upsertMarkerById(
+            floorId: ID!,
+            id: ID
+            x: Float!
+            y: Float!
+            dataSetInfoId: String!
+        ): FloorPlanArea
+
         updateFloorPlanWithAreas(
             id: ID!,
             areas: [FloorPlanAreaInput]

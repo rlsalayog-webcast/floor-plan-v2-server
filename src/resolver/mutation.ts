@@ -87,6 +87,21 @@ export const deleteFloor = async (_, { id, landmarkId }) => {
     }
 };
 
+export const upsertMarkerById = async (_: any, { id, x, y, dataSetInfoId, floorId }: any) => {
+    if (id) {
+        // Update existing marker
+        const marker = await FloorPlanArea.findByPk(id);
+        if (!marker) throw new Error("Marker not found");
+
+        await marker.update({ x, y, dataSetInfoId, floorId });
+        return marker;
+    } else {
+        // Create new marker
+        const newMarker = await FloorPlanArea.create({ x, y, dataSetInfoId, floorId });
+        return newMarker;
+    }
+};
+
 export const updateFloorPlanWithAreas = async (_, { id, areas }) => {
     const transaction = await sequelize.transaction();
 
