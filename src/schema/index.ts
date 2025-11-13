@@ -37,7 +37,7 @@ export const typeDefs = `#graphql
         deleteFloor(
             id: ID!,
             landmarkId: ID!,
-        ): Boolean!
+        ): DeleteResponse!
 
         upsertMarkerById(
             floorId: ID!,
@@ -46,6 +46,8 @@ export const typeDefs = `#graphql
             y: Float!
             dataSetInfoId: String!
         ): FloorPlanArea
+
+        deleteMarkerById(id: ID!, floorId: ID!): DeleteResponse!
 
         updateFloorPlanWithAreas(
             id: ID!,
@@ -101,6 +103,12 @@ export const typeDefs = `#graphql
         createdAt: String!
         updatedAt: String!
     }
+
+    type DeleteResponse {
+        success: Boolean!
+        message: String
+        id: ID
+    }
     
     input FloorPlanAreaInput {
         id: ID
@@ -108,4 +116,5 @@ export const typeDefs = `#graphql
         y: Float!
         dataSetInfoId: String!
     }
+    
 `;

@@ -80,7 +80,7 @@ export const deleteFloor = async (_, { id, landmarkId }) => {
         if (!floor) throw new Error("Floor not found for this landmark");
 
         await floor.destroy(); // 👈 will soft delete (set deletedAt)
-        return true;
+        return { success: true, message: "Floor deleted successfully", id };
     } catch (err) {
         console.error("Error deleting floor:", err);
         throw new Error("Failed to delete floor");
@@ -100,6 +100,32 @@ export const upsertMarkerById = async (_: any, { id, x, y, dataSetInfoId, floorI
         const newMarker = await FloorPlanArea.create({ x, y, dataSetInfoId, floorId });
         return newMarker;
     }
+};
+
+export const deleteMarkerById = async (
+    _: any,
+    { floorId, id }: { floorId: string; id: string }
+) => {
+    if (!id || !floorId) {
+        throw new Error("Both Marker ID and Floor ID are required");
+    }
+
+    const marker = await FloorPlanArea.findOne({
+        where: { id, floorId },
+    });
+
+    if (!marker) {
+        throw new Error("Marker not found for the specified floor");
+    }
+
+    await marker.destroy();
+
+    return {
+        success: true,
+        message: "Marker deleted successfully",
+        id,
+        floorId,
+    };
 };
 
 export const updateFloorPlanWithAreas = async (_, { id, areas }) => {
